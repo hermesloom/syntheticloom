@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button, Input, Divider } from "@nextui-org/react";
 import emailValidator from "email-validator";
 import { Turnstile } from "@marsidev/react-turnstile";
