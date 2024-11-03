@@ -23,7 +23,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     });
 
     supabase.auth.onAuthStateChange((_event, session) => {
-      console.log(_event, session);
       setSession(session);
     });
   }, []);

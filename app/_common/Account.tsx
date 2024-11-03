@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, Input, Tabs, Tab } from "@nextui-org/react";
 import { supabase } from "./supabase";
 import { useSession } from "./SessionContext";
+import SubscribeButton from "./SubscribeButton";
 
 export default function Account() {
   const { session } = useSession();
@@ -63,7 +64,7 @@ export default function Account() {
                   Manage your subscription and billing.
                 </p>
               </div>
-              {/* Add subscription management here */}
+              <SubscribeButton />
             </div>
           )}
 
