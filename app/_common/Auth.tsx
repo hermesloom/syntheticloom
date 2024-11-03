@@ -3,19 +3,22 @@ import { Button, Input, Divider } from "@nextui-org/react";
 import emailValidator from "email-validator";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { supabase } from "./supabase";
-import { GithubOutlined } from "@ant-design/icons";
+import { GithubOutlined, GoogleOutlined } from "@ant-design/icons";
 
 export default function Auth() {
-  const [loading, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [showCheckEmail, setShowCheckEmail] = useState(false);
   const [otp, setOtp] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | undefined>(
     process.env.NODE_ENV === "development" ? "development" : undefined
   );
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleLogin = async () => {
-    setLoading(true);
+    setEmailLoading(true);
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -28,11 +31,11 @@ export default function Auth() {
       setShowCheckEmail(true);
       setCaptchaToken(undefined);
     }
-    setLoading(false);
+    setEmailLoading(false);
   };
 
   const handleVerifyOtp = async () => {
-    setLoading(true);
+    setOtpLoading(true);
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
@@ -42,11 +45,11 @@ export default function Auth() {
     if (error) {
       alert(error.message);
     }
-    setLoading(false);
+    setOtpLoading(false);
   };
 
   const handleGitHubLogin = async () => {
-    setLoading(true);
+    setGithubLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
       options: {
@@ -57,7 +60,22 @@ export default function Auth() {
     if (error) {
       alert(error.message);
     }
-    setLoading(false);
+    setGithubLoading(false);
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      alert(error.message);
+    }
+    setGoogleLoading(false);
   };
 
   if (showCheckEmail) {
@@ -86,7 +104,7 @@ export default function Auth() {
               <Button
                 color="primary"
                 isDisabled={otp.length !== 6}
-                isLoading={loading}
+                isLoading={otpLoading}
                 onClick={handleVerifyOtp}
                 size="lg"
                 className="w-full font-medium"
@@ -128,7 +146,7 @@ export default function Auth() {
           <Button
             color="primary"
             isDisabled={!emailValidator.validate(email) || !captchaToken}
-            isLoading={loading}
+            isLoading={emailLoading}
             onClick={handleLogin}
             size="lg"
             className="w-full font-medium"
@@ -145,12 +163,22 @@ export default function Auth() {
 
         <div className="space-y-4">
           <Button
+            startContent={<GoogleOutlined style={{ fontSize: "1.25rem" }} />}
+            variant="bordered"
+            size="lg"
+            className="w-full font-medium"
+            onClick={handleGoogleLogin}
+            isLoading={googleLoading}
+          >
+            Continue with Google
+          </Button>
+          <Button
             startContent={<GithubOutlined style={{ fontSize: "1.25rem" }} />}
             variant="bordered"
             size="lg"
             className="w-full font-medium"
             onClick={handleGitHubLogin}
-            isLoading={loading}
+            isLoading={githubLoading}
           >
             Continue with GitHub
           </Button>
