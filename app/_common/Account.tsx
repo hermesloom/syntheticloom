@@ -1,26 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button, Input, Tabs, Tab } from "@nextui-org/react";
 import { supabase } from "./supabase";
 import { useSession } from "./SessionContext";
 
 export default function Account() {
-  const [loading, setLoading] = useState(true);
   const { session } = useSession();
   const [selectedTab, setSelectedTab] = useState("account");
-
-  useEffect(() => {
-    let ignore = false;
-    async function getProfile() {
-      setLoading(true);
-      setLoading(false);
-    }
-
-    getProfile();
-
-    return () => {
-      ignore = true;
-    };
-  }, [session]);
 
   return (
     <div className="min-h-[600px] px-10 py-10">
