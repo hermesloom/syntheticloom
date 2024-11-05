@@ -1,32 +1,25 @@
-import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
+import { requestWithAuth } from "../_common/endpoints";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
-export async function POST(request: Request) {
-  const { user_id } = await request.json();
-
+export const GET = requestWithAuth(async (supabase, user, request) => {
   // Fetch the user's profile from Supabase
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("stripe_customer_id")
-    .eq("id", user_id)
+    .eq("id", user?.id)
     .single();
 
   if (error) {
-    return NextResponse.json({ error: "User not found" }, { status: 500 });
+    throw new Error("User not found");
   }
 
   // Create Stripe customer if not existing
   let customerId = profile.stripe_customer_id;
   if (!customerId) {
     const customer = await stripe.customers.create({
-      metadata: { supabase_user_id: user_id },
+      metadata: { supabase_user_id: user!.id },
     });
     customerId = customer.id;
 
@@ -34,7 +27,7 @@ export async function POST(request: Request) {
     await supabase
       .from("profiles")
       .update({ stripe_customer_id: customerId })
-      .eq("id", user_id);
+      .eq("id", user?.id);
   }
 
   // Create a new Stripe Checkout session
@@ -48,9 +41,9 @@ export async function POST(request: Request) {
       },
     ],
     mode: "subscription",
-    success_url: `${request.headers.get("origin")}`,
-    cancel_url: `${request.headers.get("origin")}`,
+    success_url: request.headers.get("referer")!,
+    cancel_url: request.headers.get("referer")!,
   });
 
-  return NextResponse.json({ id: session.id });
-}
+  return { id: session.id };
+});

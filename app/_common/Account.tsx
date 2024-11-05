@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Button, Input, Tabs, Tab } from "@nextui-org/react";
-import { supabase } from "./supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useSession } from "./SessionContext";
 import SubscribeButton from "./SubscribeButton";
 
 export default function Account() {
+  const supabase = createClient();
   const { session } = useSession();
   const [selectedTab, setSelectedTab] = useState("account");
 

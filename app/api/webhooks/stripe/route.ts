@@ -1,6 +1,8 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/utils/supabase/server";
+
 const relevantEvents = new Set([
   "checkout.session.completed",
   "invoice.payment_succeeded",
@@ -8,12 +10,11 @@ const relevantEvents = new Set([
 ]);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
-async function getCustomerUUID(stripeCustomerId: string): Promise<string> {
+async function getCustomerUUID(
+  supabase: SupabaseClient,
+  stripeCustomerId: string
+): Promise<string> {
   const { data: customerData, error: noCustomerError } = await supabase
     .from("profiles")
     .select("id")
@@ -29,7 +30,7 @@ async function getCustomerUUID(stripeCustomerId: string): Promise<string> {
 }
 
 export async function POST(req: Request) {
-  console.log("Received a request");
+  const supabase = await createClient();
   const body = await req.text();
   const sig = req.headers.get("stripe-signature") as string;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -37,16 +38,13 @@ export async function POST(req: Request) {
 
   try {
     if (!sig || !webhookSecret) {
-      console.log("Webhook secret not found");
       return NextResponse.json(
         { error: "Webhook secret not found." },
         { status: 400 }
       );
     }
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-    console.log(`🔔  Webhook received: ${event.type}`);
   } catch (err: any) {
-    console.log(`❌ Error message: ${err.message}`);
     return NextResponse.json(
       { error: `Webhook Error: ${err.message}` },
       { status: 400 }
@@ -54,12 +52,14 @@ export async function POST(req: Request) {
   }
 
   if (relevantEvents.has(event.type)) {
-    console.log(`Processing relevant event: ${event.type}`);
     try {
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object;
-          const userId = await getCustomerUUID(session.customer as string);
+          const userId = await getCustomerUUID(
+            supabase,
+            session.customer as string
+          );
           const subscriptionId = session.subscription;
 
           // Update profile with subscription ID
@@ -78,7 +78,10 @@ export async function POST(req: Request) {
         }
         case "customer.subscription.deleted": {
           const subscription = event.data.object;
-          const userId = await getCustomerUUID(subscription.customer as string);
+          const userId = await getCustomerUUID(
+            supabase,
+            subscription.customer as string
+          );
           const currentSubscriptionId = (
             await supabase
               .from("profiles")
@@ -96,7 +99,7 @@ export async function POST(req: Request) {
               `Updated profile of user ${userId} with null subscription ID`
             );
           } else {
-            console.log(
+            throw new Error(
               `Subscription ${subscription.id} not found for user ${userId}`
             );
           }
@@ -104,24 +107,21 @@ export async function POST(req: Request) {
           break;
         }
         default: {
-          console.log("Unhandled relevant event type!");
           throw new Error("Unhandled relevant event!");
         }
       }
     } catch (error) {
-      console.log(`Error handling event: ${event.type}`, error);
+      console.error(`Error handling event: ${event.type}`, error);
       return NextResponse.json(
         { error: "Webhook handler failed. View your Next.js function logs." },
         { status: 400 }
       );
     }
   } else {
-    console.log(`Unsupported event type: ${event.type}`);
     return NextResponse.json(
       { error: `Unsupported event type: ${event.type}` },
       { status: 400 }
     );
   }
-  console.log("Event processed successfully");
   return NextResponse.json({ received: true }, { status: 200 });
 }

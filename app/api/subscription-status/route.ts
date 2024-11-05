@@ -1,32 +1,26 @@
-import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
+import { requestWithAuth } from "../_common/endpoints";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
-export async function POST(request: Request) {
-  // TODO: do proper auth check
-  const { user_id } = await request.json();
-
+export const GET = requestWithAuth(async (supabase, user, request) => {
   // Fetch the user's profile from Supabase
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("stripe_customer_id,stripe_subscription_id")
-    .eq("id", user_id)
+    .eq("id", user.id)
     .single();
 
   if (error || !profile.stripe_subscription_id) {
-    return NextResponse.json({ billingPortalUrl: null });
+    // TODO: when this is the case, also check the Stripe API whether the user is actually not subscribed
+    // to mitigate webhook messages having been lost
+    return { billingPortalUrl: null };
   }
 
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: profile.stripe_customer_id,
-    return_url: `${request.headers.get("origin")}`,
+    return_url: `${request.headers.get("referer")}`,
   });
 
-  return NextResponse.json({ billingPortalUrl: portalSession.url });
-}
+  return { billingPortalUrl: portalSession.url };
+});

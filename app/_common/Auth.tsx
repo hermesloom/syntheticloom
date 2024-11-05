@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Button, Input, Divider } from "@nextui-org/react";
 import emailValidator from "email-validator";
 import { Turnstile } from "@marsidev/react-turnstile";
-import { supabase } from "./supabase";
+import { createClient } from "@/utils/supabase/client";
 import { GithubOutlined, GoogleOutlined } from "@ant-design/icons";
 
 export default function Auth() {
+  const supabase = createClient();
   const [emailLoading, setEmailLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);

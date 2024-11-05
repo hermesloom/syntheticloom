@@ -26,11 +26,7 @@ export default function SubscribeButton() {
       return;
     }
 
-    fetch("/api/subscription-status", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: session.user.id }),
-    })
+    fetch("/api/subscription-status")
       .then((res) => res.json())
       .then((data) => {
         setSubscriptionStatus(data);
@@ -46,12 +42,7 @@ export default function SubscribeButton() {
     setLoading(true);
     try {
       const stripe = await stripePromise;
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: session.user.id }),
-      });
-
+      const response = await fetch("/api/create-checkout-session");
       const checkoutSession = await response.json();
 
       if (checkoutSession.id) {

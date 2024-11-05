@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
+import { createClient } from "@/utils/supabase/client";
 
 interface SessionContextType {
   session: Session | null;
@@ -15,6 +15,7 @@ const SessionContext = createContext<SessionContextType>({
 });
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
+  const supabase = createClient();
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
