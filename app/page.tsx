@@ -101,7 +101,9 @@ export default function Home() {
           />
         </div>
         <div className="w-1/2 p-4">
-          <div className="bg-gray-100 h-full rounded-lg p-4">Content Area</div>
+          <div className="bg-gray-100 h-full rounded-lg p-4">
+            Content Area (currently under development and not functional yet)
+          </div>
         </div>
       </div>
 
