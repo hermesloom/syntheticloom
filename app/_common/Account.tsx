@@ -3,6 +3,8 @@ import { Button, Input, Tabs, Tab } from "@nextui-org/react";
 import { createClient } from "@/utils/supabase/client";
 import { useSession } from "./SessionContext";
 import SubscribeButton from "./SubscribeButton";
+import { ApiKey } from "./ApiKey";
+import { ApiCredits } from "./ApiCredits";
 
 export default function Account() {
   const supabase = createClient();
@@ -20,7 +22,7 @@ export default function Account() {
           className="w-full"
         >
           <Tab key="account" title="Account" />
-          <Tab key="subscription" title="Subscription" />
+          <Tab key="credits" title="Credits" />
           <Tab key="apikeys" title="API Keys" />
         </Tabs>
 
@@ -51,33 +53,33 @@ export default function Account() {
                   size="lg"
                   className="w-full font-medium"
                 >
-                  Sign Out
+                  Sign out
                 </Button>
               </div>
             </div>
           )}
 
-          {selectedTab === "subscription" && (
+          {selectedTab === "credits" && (
             <div className="space-y-6">
               <div className="space-y-1">
-                <h1 className="text-2xl font-bold">Subscription</h1>
+                <h1 className="text-2xl font-bold">Credits</h1>
                 <p className="text-sm text-default-500">
-                  Manage your subscription and billing.
+                  Manage your credits for using Synthetic Loom.
                 </p>
               </div>
-              <SubscribeButton />
+              <ApiCredits />
             </div>
           )}
 
           {selectedTab === "apikeys" && (
             <div className="space-y-6">
               <div className="space-y-1">
-                <h1 className="text-2xl font-bold">API Keys</h1>
+                <h1 className="text-2xl font-bold">API</h1>
                 <p className="text-sm text-default-500">
-                  Manage your API keys for accessing the service.
+                  Manage the API for accessing Synthetic Loom.
                 </p>
               </div>
-              {/* Add API key management here */}
+              <ApiKey />
             </div>
           )}
         </div>

@@ -79,6 +79,22 @@ export default function Auth() {
     setGoogleLoading(false);
   };
 
+  const canSendMagicLink = emailValidator.validate(email) && captchaToken;
+
+  const handleEmailKeyUp = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && canSendMagicLink) {
+      handleLogin();
+    }
+  };
+
+  const canVerifyOtp = otp.length === 6;
+
+  const handleOtpKeyUp = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && canVerifyOtp) {
+      handleVerifyOtp();
+    }
+  };
+
   if (showCheckEmail) {
     return (
       <div className="flex items-center justify-center px-10 py-10">
@@ -101,10 +117,11 @@ export default function Auth() {
                 size="lg"
                 maxLength={6}
                 pattern="[0-9]*"
+                onKeyUp={handleOtpKeyUp}
               />
               <Button
                 color="primary"
-                isDisabled={otp.length !== 6}
+                isDisabled={!canVerifyOtp}
                 isLoading={otpLoading}
                 onClick={handleVerifyOtp}
                 size="lg"
@@ -137,6 +154,7 @@ export default function Auth() {
             onValueChange={setEmail}
             variant="bordered"
             size="lg"
+            onKeyUp={handleEmailKeyUp}
           />
           {process.env.NODE_ENV !== "development" && (
             <Turnstile
@@ -146,7 +164,7 @@ export default function Auth() {
           )}
           <Button
             color="primary"
-            isDisabled={!emailValidator.validate(email) || !captchaToken}
+            isDisabled={!canSendMagicLink}
             isLoading={emailLoading}
             onClick={handleLogin}
             size="lg"

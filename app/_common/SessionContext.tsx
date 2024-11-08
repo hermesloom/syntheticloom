@@ -7,21 +7,30 @@ import { createClient } from "@/utils/supabase/client";
 interface SessionContextType {
   session: Session | null;
   setSession: (session: Session | null) => void;
+  isLoading: boolean;
 }
 
 const SessionContext = createContext<SessionContextType>({
   session: null,
   setSession: () => {},
+  isLoading: true,
 });
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
   const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    setIsLoading(true);
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
 
     supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -29,7 +38,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SessionContext.Provider value={{ session, setSession }}>
+    <SessionContext.Provider value={{ session, setSession, isLoading }}>
       {children}
     </SessionContext.Provider>
   );

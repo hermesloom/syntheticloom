@@ -1,22 +1,40 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { SupabaseClient, User } from "@supabase/supabase-js";
 
 export type RequestWithAuthHandler = (
   supabase: SupabaseClient,
-  user: User,
-  request: Request
+  user: { id: string },
+  request: NextRequest
 ) => Promise<any>;
 
 export function requestWithAuth(handler: RequestWithAuthHandler) {
-  return async (req: Request) => {
+  return async (req: NextRequest) => {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    let { data: getUserData } = await supabase.auth.getUser();
+
+    let user: { id: string } | null = getUserData?.user
+      ? { id: getUserData.user.id }
+      : null;
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      const apiKey = req.headers.get("authorization");
+      if (!apiKey || !apiKey.startsWith("Bearer ")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+
+      const key = apiKey.split(" ")[1];
+      const userWithKey = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("api_key", key)
+        .single();
+
+      if (userWithKey.error) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+
+      user = { id: userWithKey.data.id };
     }
 
     try {

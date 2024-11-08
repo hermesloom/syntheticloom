@@ -3,31 +3,9 @@ import { NextResponse } from "next/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 
-const relevantEvents = new Set([
-  "checkout.session.completed",
-  "invoice.payment_succeeded",
-  "customer.subscription.deleted",
-]);
+const relevantEvents = new Set(["checkout.session.completed"]);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-async function getCustomerUUID(
-  supabase: SupabaseClient,
-  stripeCustomerId: string
-): Promise<string> {
-  const { data: customerData, error: noCustomerError } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("stripe_customer_id", stripeCustomerId)
-    .single();
-
-  if (noCustomerError) {
-    console.error(`Customer lookup failed: ${noCustomerError.message}`);
-    throw new Error(`Customer lookup failed: ${noCustomerError.message}`);
-  }
-
-  return customerData.id;
-}
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -56,54 +34,35 @@ export async function POST(req: Request) {
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object;
-          const userId = await getCustomerUUID(
-            supabase,
-            session.customer as string
-          );
-          const subscriptionId = session.subscription;
+          if (!session.metadata?.supabase_user_id) {
+            throw new Error("No user ID found in session metadata");
+          }
 
-          // Update profile with subscription ID
-          await supabase
+          const { data, error } = await supabase
             .from("profiles")
-            .update({ stripe_subscription_id: subscriptionId })
-            .eq("id", userId);
-          console.log(
-            `Updated profile of user ${userId} with subscription ID: ${subscriptionId}`
-          );
-          break;
-        }
-        case "invoice.payment_succeeded": {
-          console.log(`Handling invoice.payment_succeeded`);
-          break;
-        }
-        case "customer.subscription.deleted": {
-          const subscription = event.data.object;
-          const userId = await getCustomerUUID(
-            supabase,
-            subscription.customer as string
-          );
-          const currentSubscriptionId = (
-            await supabase
-              .from("profiles")
-              .select("stripe_subscription_id")
-              .eq("id", userId)
-              .single()
-          ).data?.stripe_subscription_id;
+            .select("api_credits")
+            .eq("id", session.metadata.supabase_user_id)
+            .single();
 
-          if (currentSubscriptionId === subscription.id) {
-            await supabase
-              .from("profiles")
-              .update({ stripe_subscription_id: null })
-              .eq("id", userId);
-            console.log(
-              `Updated profile of user ${userId} with null subscription ID`
-            );
-          } else {
+          if (error) {
             throw new Error(
-              `Subscription ${subscription.id} not found for user ${userId}`
+              "User not found: " + session.metadata.supabase_user_id
             );
           }
 
+          // add amount_total * 10000 to the user's api credits
+          const newCredits =
+            (data.api_credits ?? 0) + session.amount_total! * 10000;
+          await supabase
+            .from("profiles")
+            .update({
+              api_credits: newCredits,
+            })
+            .eq("id", session.metadata.supabase_user_id);
+
+          console.log(
+            `Updated credits for user ${session.metadata.supabase_user_id} to ${newCredits} (added ${session.amount_total! * 10000})`
+          );
           break;
         }
         default: {
