@@ -104,5 +104,5 @@ export default function RunPage() {
     );
   }
 
-  return <div>Unknown UI type: {config?.config.ui}</div>;
+  return <div>Unknown UI type: {config?.config.interface}</div>;
 }
