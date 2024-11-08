@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button, Input, Tabs, Tab } from "@nextui-org/react";
 import { createClient } from "@/utils/supabase/client";
 import { useSession } from "./SessionContext";
-import SubscribeButton from "./SubscribeButton";
 import { ApiKey } from "./ApiKey";
 import { ApiCredits } from "./ApiCredits";
 

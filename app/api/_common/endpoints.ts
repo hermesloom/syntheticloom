@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { SupabaseClient, User } from "@supabase/supabase-js";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export type RequestWithAuthHandler = (
   supabase: SupabaseClient,
@@ -11,7 +11,7 @@ export type RequestWithAuthHandler = (
 export function requestWithAuth(handler: RequestWithAuthHandler) {
   return async (req: NextRequest) => {
     const supabase = await createClient();
-    let { data: getUserData } = await supabase.auth.getUser();
+    const { data: getUserData } = await supabase.auth.getUser();
 
     let user: { id: string } | null = getUserData?.user
       ? { id: getUserData.user.id }

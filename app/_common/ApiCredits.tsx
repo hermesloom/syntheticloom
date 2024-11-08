@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Tooltip, Spinner, Input } from "@nextui-org/react";
+import { Button, Tooltip, Input } from "@nextui-org/react";
 import { ReloadOutlined } from "@ant-design/icons";
 
 export function ApiCredits() {

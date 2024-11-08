@@ -16,8 +16,6 @@ interface RunConfig {
   config: ChatConfig;
 }
 
-class SyntheticLoom {}
-
 function parseConfig(content: string) {
   return content
     .split("\n")

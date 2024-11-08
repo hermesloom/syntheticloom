@@ -1,6 +1,6 @@
 import { requestWithAuth } from "../_common/endpoints";
 
-export const GET = requestWithAuth(async (supabase, user, request) => {
+export const GET = requestWithAuth(async (supabase, user) => {
   // Fetch the user's profile from Supabase
   const { data: profile, error } = await supabase
     .from("profiles")
