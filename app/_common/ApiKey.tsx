@@ -8,13 +8,11 @@ export function ApiKey() {
   const [apiKey, setApiKey] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [confirmRegenerate, setConfirmRegenerate] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchApiKey = async (generateNew: boolean = false) => {
     try {
-      if (generateNew) {
-        setIsRegenerating(true);
-      }
+      setIsLoading(true);
       const url = generateNew
         ? "/api/api-key?generate_new=true"
         : "/api/api-key";
@@ -26,7 +24,7 @@ export function ApiKey() {
     } catch (error) {
       console.error("Error fetching API key:", error);
     } finally {
-      setIsRegenerating(false);
+      setIsLoading(false);
     }
   };
 
@@ -57,7 +55,7 @@ export function ApiKey() {
       <div className="flex gap-2">
         <Input
           id="api-key"
-          value={apiKey.slice(0, 20) + "…"}
+          value={isLoading ? "Loading..." : apiKey.slice(0, 20) + "..."}
           readOnly
           label="API Key"
           variant="bordered"
@@ -65,7 +63,6 @@ export function ApiKey() {
           classNames={{
             input: "font-mono",
           }}
-          placeholder="Loading API key..."
           endContent={
             <Tooltip content="Copy to clipboard">
               <Button
@@ -73,6 +70,7 @@ export function ApiKey() {
                 variant="light"
                 onClick={copyToClipboard}
                 className="min-w-unit-8"
+                isLoading={isLoading}
               >
                 {copied ? (
                   <CheckOutlined style={{ color: "#22c55e" }} />
@@ -87,12 +85,12 @@ export function ApiKey() {
       <Button
         color={confirmRegenerate ? "danger" : "primary"}
         onClick={handleRegenerateClick}
-        isLoading={isRegenerating}
-        isDisabled={isRegenerating}
+        isLoading={isLoading}
+        isDisabled={isLoading}
         size="lg"
         className="w-full font-medium"
       >
-        {isRegenerating
+        {isLoading
           ? "Regenerating..."
           : confirmRegenerate
             ? "This will invalidate the current API key. Click to confirm."
