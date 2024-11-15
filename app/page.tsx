@@ -19,7 +19,7 @@ import Account from "./_common/Account";
 import debounce from "lodash/debounce";
 
 const initialCode = `//& interface: chat
-//& title: What should I explain?
+//& title: What should I explain? (in development, not functional yet)
 
 async function main(loom) {
   while (true) {
