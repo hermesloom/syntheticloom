@@ -42,6 +42,9 @@ export default function Home() {
     onClose: onAccountClose,
   } = useDisclosure();
   const [code, setCode] = useState(initialCode);
+  const [currentlyRunningCode, setCurrentlyRunningCode] = useState<
+    string | null
+  >(null);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -63,6 +66,10 @@ export default function Home() {
   const debouncedRunCode = useCallback(
     debounce(async (codeToRun: string) => {
       try {
+        if (!session) {
+          return;
+        }
+
         const response = await fetch("/api/upload-loomscript", {
           method: "POST",
           headers: {
@@ -77,19 +84,22 @@ export default function Home() {
 
         const data = await response.json();
         setIframeUrl(data.url);
+        setCurrentlyRunningCode(codeToRun);
       } catch (error) {
         console.error("Error uploading code:", error);
       }
     }, 1000),
-    []
+    [session]
   );
 
   useEffect(() => {
-    debouncedRunCode(code);
+    if (session && currentlyRunningCode !== code) {
+      debouncedRunCode(code);
+    }
     return () => {
       debouncedRunCode.cancel();
     };
-  }, [code, debouncedRunCode]);
+  }, [session, currentlyRunningCode, code, debouncedRunCode]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
