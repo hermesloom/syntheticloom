@@ -50,6 +50,7 @@ export async function POST(req: Request) {
           }
 
           // add amount_total * 10000 to the user's api credits
+          // i.e. €1 = 1,000,000 credits
           const newCredits =
             (data.api_credits ?? 0) + session.amount_total! * 10000;
           await supabase

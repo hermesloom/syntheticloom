@@ -1,22 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  Navbar,
-  NavbarBrand,
-  NavbarContent,
-  Avatar,
-  Modal,
-  ModalContent,
-  ModalBody,
-  useDisclosure,
-  Button,
-  Textarea,
-} from "@nextui-org/react";
+import React, { useEffect } from "react";
+import { Modal, ModalContent, ModalBody } from "@nextui-org/react";
+import { redirect } from "next/navigation";
 import Auth from "./_common/Auth";
 import { useSession } from "./_common/SessionContext";
-import Account from "./_common/Account";
-import debounce from "lodash/debounce";
 
 const initialCode = `//& interface: chat
 //& title: What should I explain? (in development, not functional yet)
@@ -30,40 +18,21 @@ async function main(loom) {
 }`;
 
 export default function Home() {
-  const { session, isLoading: sessionLoading } = useSession();
-  const {
-    isOpen: isAuthOpen,
-    onOpen: onAuthOpen,
-    onClose: onAuthClose,
-  } = useDisclosure();
-  const {
-    isOpen: isAccountOpen,
-    onOpen: onAccountOpen,
-    onClose: onAccountClose,
-  } = useDisclosure();
-  const [code, setCode] = useState(initialCode);
+  const { session } = useSession();
+  /*const [code, setCode] = useState(initialCode);
   const [currentlyRunningCode, setCurrentlyRunningCode] = useState<
     string | null
   >(null);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
-  const [isCopied, setIsCopied] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);*/
 
   useEffect(() => {
-    if (!session && !sessionLoading) {
-      onAuthOpen();
-    }
-  }, [session, sessionLoading, onAuthOpen]);
-
-  useEffect(() => {
-    if (session && isAuthOpen) {
-      onAuthClose();
-    }
-    if (!session && isAccountOpen) {
-      onAccountClose();
+    if (session) {
+      redirect("/project");
     }
   }, [session]);
 
-  const debouncedRunCode = useCallback(
+  /*const debouncedRunCode = useCallback(
     debounce(async (codeToRun: string) => {
       try {
         if (!session) {
@@ -99,28 +68,26 @@ export default function Home() {
     return () => {
       debouncedRunCode.cancel();
     };
-  }, [session, currentlyRunningCode, code, debouncedRunCode]);
+  }, [session, currentlyRunningCode, code, debouncedRunCode]);*/
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <Navbar className="border-b w-full h-12" maxWidth="full">
-        <NavbarBrand>
-          <p className="font-bold text-l">Synthetic Loom</p>
-        </NavbarBrand>
-        <NavbarContent justify="end">
-          {session ? (
-            <Button isIconOnly variant="light" onClick={onAccountOpen}>
-              <Avatar
-                size="sm"
-                showFallback
-                name={session.user.email?.[0].toUpperCase()}
-              />
-            </Button>
-          ) : null}
-        </NavbarContent>
-      </Navbar>
+    <Modal
+      isOpen
+      classNames={{
+        base: "m-0",
+        wrapper: "items-center",
+      }}
+    >
+      <ModalContent className="m-4">
+        <ModalBody>
+          <Auth />
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
 
-      {session ? (
+  {
+    /*session ? (
         <div className="flex flex-1 h-[calc(100vh-3rem)]">
           <div className="w-1/2 border-r p-4 flex flex-col">
             <Textarea
@@ -173,38 +140,6 @@ export default function Home() {
             )}
           </div>
         </div>
-      ) : null}
-
-      <Modal
-        isOpen={isAuthOpen}
-        onClose={onAuthClose}
-        classNames={{
-          base: "m-0",
-          wrapper: "items-center",
-        }}
-      >
-        <ModalContent className="m-4">
-          <ModalBody>
-            <Auth />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-
-      <Modal
-        isOpen={isAccountOpen}
-        onClose={onAccountClose}
-        size="2xl"
-        classNames={{
-          base: "m-0",
-          wrapper: "items-center",
-        }}
-      >
-        <ModalContent className="m-4">
-          <ModalBody>
-            <Account />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </div>
-  );
+      ) : null*/
+  }
 }

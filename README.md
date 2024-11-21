@@ -9,6 +9,15 @@ Trivial AI programming for everyone.
 3. `npm install`
 4. `npm run dev`
 
+## Useful commands
+
+Nuke the entire database and set it up with the updated schema:
+
+```
+npx supabase db reset
+npx supabase db reset --linked
+```
+
 ## Co-creation
 
 Please contact synergies@hermesloom.org for collaboration and co-creation.

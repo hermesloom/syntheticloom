@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Input, Tabs, Tab } from "@nextui-org/react";
+import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useSession } from "./SessionContext";
 import { ApiKey } from "./ApiKey";
